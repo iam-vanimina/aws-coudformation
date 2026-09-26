@@ -1575,4 +1575,82 @@ aws cloudformation describe-stacks \
   --stack-name my-first-stack
 ```
 
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Application Load Balancer Lab
+
+Parameters:
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet::Id
+
+Resources:
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic to ALB
+      VpcId: !Ref VpcId
+
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: cloudformation-alb
+      Scheme: internet-facing
+      Type: application
+
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: cloudformation-web-tg
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: instance
+
+      HealthCheckEnabled: true
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebTargetGroup
+
+Outputs:
+
+  LoadBalancerDNS:
+    Description: ALB DNS name
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+
+  TargetGroupArn:
+    Description: Target Group ARN
+    Value: !Ref WebTargetGroup
+
 **Next milestone:** build the same infrastructure first with CloudFormation, then compare the design with Terraform to understand where each IaC approach fits.
