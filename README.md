@@ -1574,7 +1574,7 @@ Then verify:
 aws cloudformation describe-stacks \
   --stack-name my-first-stack
 ```
-
+```
 AWSTemplateFormatVersion: '2010-09-09'
 
 Description: Application Load Balancer Lab
@@ -1652,5 +1652,35 @@ Outputs:
   TargetGroupArn:
     Description: Target Group ARN
     Value: !Ref WebTargetGroup
+```
+```
+    aws cloudformation validate-template \
+  --template-body file://09-load-balancer/alb.yaml
+```
+
+  Deploy:
+  ```
+  aws cloudformation create-stack \
+  --stack-name cloudformation-alb \
+  --template-body file://09-load-balancer/alb.yaml \
+  --parameters \
+    ParameterKey=VpcId,ParameterValue=<VPC-ID> \
+    ParameterKey=PublicSubnet1,ParameterValue=<SUBNET-1-ID> \
+    ParameterKey=PublicSubnet2,ParameterValue=<SUBNET-2-ID>
+
+```
+check:
+```
+aws cloudformation describe-stacks \
+  --stack-name cloudformation-alb
+```
+ Get DNS name:
+
+ ```
+aws cloudformation describe-stacks \
+  --stack-name cloudformation-alb \
+  --query 'Stacks[0].Outputs'
+```
+
 
 **Next milestone:** build the same infrastructure first with CloudFormation, then compare the design with Terraform to understand where each IaC approach fits.
